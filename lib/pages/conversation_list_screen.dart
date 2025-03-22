@@ -47,10 +47,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
   final List<Conversation> _conversations = [];
 
   void _organizeConversations() {
-    // Clear existing conversations
     _conversations.clear();
-
-    // Group messages by address
     Map<String, List<SmsMessage>> messagesByAddress = {};
 
     for (var message in _messages) {
@@ -60,9 +57,8 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
       messagesByAddress[message.address]!.add(message);
     }
 
-    // Create conversations from grouped messages
+    //create conversations from grouped messages
     messagesByAddress.forEach((address, messages) {
-      // Sort messages by date (oldest first for conversation history)
       messages.sort((a, b) => a.date.compareTo(b.date));
 
       List<Message> formattedMessages =
