@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:q_messenger/pages/conversation_list_screen.dart';
-import 'package:q_messenger/resources/data_models.dart';
+import 'package:q_messenger/pages/import_screen.dart';
 
 void main() {
   runApp(SecureSMSApp());
@@ -37,6 +37,7 @@ class SecureSMSApp extends StatelessWidget {
       ),
       themeMode: ThemeMode.system,
       home: ConversationListScreen(),
+      // home: SmsImportScreen(),
     );
   }
 }
