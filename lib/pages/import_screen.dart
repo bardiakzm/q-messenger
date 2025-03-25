@@ -3,6 +3,8 @@ import 'package:q_messenger/services/sms_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class SmsImportScreen extends StatefulWidget {
+  const SmsImportScreen({super.key});
+
   @override
   _SmsImportScreenState createState() => _SmsImportScreenState();
 }
