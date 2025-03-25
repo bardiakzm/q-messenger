@@ -17,6 +17,23 @@ class SmsService {
       return [];
     }
   }
+
+  /// send sms
+  static Future<bool> sendSms({
+    required String address,
+    required String body,
+  }) async {
+    try {
+      final bool result = await _channel.invokeMethod('sendSms', {
+        'address': address,
+        'body': body,
+      });
+      return result;
+    } on PlatformException catch (e) {
+      print("Failed to send SMS: ${e.message}");
+      return false;
+    }
+  }
 }
 
 class SmsMessage {

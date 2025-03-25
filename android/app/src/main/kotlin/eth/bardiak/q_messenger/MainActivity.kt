@@ -37,10 +37,49 @@ class MainActivity: FlutterActivity() {
                         result.error("PERMISSION_DENIED", "READ_SMS permission required", null)
                     }
                 }
+                "sendSms" -> {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS)
+                        == PackageManager.PERMISSION_GRANTED) {
+                        try {
+                            val address = call.argument<String>("address")
+                            val body = call.argument<String>("body")
+
+                            if (address == null || body == null) {
+                                result.error("INVALID_ARGUMENT", "Address and body are required", null)
+                                return@setMethodCallHandler
+                            }
+
+                            sendSms(address, body)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.error("SEND_FAILURE", e.message, null)
+                        }
+                    } else {
+                        ActivityCompat.requestPermissions(
+                            activity,
+                            arrayOf(Manifest.permission.SEND_SMS),
+                            101
+                        )
+                        result.error("PERMISSION_DENIED", "SEND_SMS permission required", null)
+                    }
+                }
                 else -> {
                     result.notImplemented()
                 }
+
             }
+        }
+    }
+
+    private fun sendSms(address: String, body: String) {
+        val smsManager = SmsManager.getDefault()
+
+        // For longer messages that might need to be split
+        if (body.length > 160) {
+            val parts = smsManager.divideMessage(body)
+            smsManager.sendMultipartTextMessage(address, null, parts, null, null)
+        } else {
+            smsManager.sendTextMessage(address, null, body, null, null)
         }
     }
 
