@@ -288,6 +288,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final success = await SmsService.sendSms(
       address: widget.conversation.contact.phoneNumber,
       body: encryptedText, // Use encrypted text if implemented
+      simSlot: 0,
     );
 
     if (!success) {

@@ -22,11 +22,13 @@ class SmsService {
   static Future<bool> sendSms({
     required String address,
     required String body,
+    int simSlot = 0, //default SIM is 0 (SIM 1)
   }) async {
     try {
       final bool result = await _channel.invokeMethod('sendSms', {
         'address': address,
         'body': body,
+        'simSlot': simSlot, // Pass selected SIM slot
       });
       return result;
     } on PlatformException catch (e) {

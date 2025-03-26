@@ -109,6 +109,12 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
             },
           ),
           IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () {
+              _loadMessagesAndSetConversations();
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.more_vert),
             onPressed: () {
               // TODO: Implement menu

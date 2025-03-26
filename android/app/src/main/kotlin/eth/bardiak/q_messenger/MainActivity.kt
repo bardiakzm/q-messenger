@@ -16,6 +16,8 @@ import android.provider.Telephony
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.telephony.SmsManager
+import android.telephony.SubscriptionManager
+
 
 
 class MainActivity: FlutterActivity() {
@@ -45,13 +47,14 @@ class MainActivity: FlutterActivity() {
                         try {
                             val address = call.argument<String>("address")
                             val body = call.argument<String>("body")
+                            val simSlot = call.argument<Int>("simSlot") ?: 0 //default to SIM 1
 
                             if (address == null || body == null) {
                                 result.error("INVALID_ARGUMENT", "Address and body are required", null)
                                 return@setMethodCallHandler
                             }
 
-                            sendSms(address, body)
+                            sendSms(address, body, simSlot)
                             result.success(true)
                         } catch (e: Exception) {
                             result.error("SEND_FAILURE", e.message, null)
@@ -65,6 +68,7 @@ class MainActivity: FlutterActivity() {
                         result.error("PERMISSION_DENIED", "SEND_SMS permission required", null)
                     }
                 }
+
                 else -> {
                     result.notImplemented()
                 }
@@ -73,15 +77,24 @@ class MainActivity: FlutterActivity() {
         }
     }
 
-    private fun sendSms(address: String, body: String) {
-        val smsManager = SmsManager.getDefault()
+    private fun sendSms(address: String, body: String, simSlot: Int = 0) {
+        try {
+            val subscriptionManager = getSystemService(SubscriptionManager::class.java)
+            val subscriptionInfoList = subscriptionManager.activeSubscriptionInfoList
 
-        // For longer messages that might need to be split
-        if (body.length > 160) {
-            val parts = smsManager.divideMessage(body)
-            smsManager.sendMultipartTextMessage(address, null, parts, null, null)
-        } else {
-            smsManager.sendTextMessage(address, null, body, null, null)
+            if (subscriptionInfoList != null && subscriptionInfoList.size > simSlot) {
+                val subscriptionId = subscriptionInfoList[simSlot].subscriptionId
+                val smsManager = SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
+
+                // For long messages, split into parts
+                val parts = smsManager.divideMessage(body)
+                smsManager.sendMultipartTextMessage(address, null, parts, null, null)
+            } else {
+                throw Exception("Invalid SIM slot or no active SIM cards.")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
         }
     }
 
