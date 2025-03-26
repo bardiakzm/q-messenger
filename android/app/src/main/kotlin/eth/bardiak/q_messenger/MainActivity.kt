@@ -15,6 +15,8 @@ import android.database.Cursor
 import android.provider.Telephony
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import android.telephony.SmsManager
+
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "eth.bardiak.q_messenger/sms_service"

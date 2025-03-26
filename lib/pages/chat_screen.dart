@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../resources/data_models.dart';
+import '../services/sms_service.dart';
 
 class ChatScreen extends StatefulWidget {
   final Conversation conversation;
@@ -166,19 +167,20 @@ class _ChatScreenState extends State<ChatScreen> {
                   icon: Icon(Icons.send),
                   color: Colors.blue,
                   onPressed: () {
-                    if (_messageController.text.isNotEmpty) {
-                      setState(() {
-                        _messages.add(
-                          Message(
-                            content: _messageController.text,
-                            timestamp: DateTime.now(),
-                            isEncrypted: _isEncrypted,
-                            isFromMe: true,
-                          ),
-                        );
-                        _messageController.clear();
-                      });
-                    }
+                    // if (_messageController.text.isNotEmpty) {
+                    //   setState(() {
+                    //     _messages.add(
+                    //       Message(
+                    //         content: _messageController.text,
+                    //         timestamp: DateTime.now(),
+                    //         isEncrypted: _isEncrypted,
+                    //         isFromMe: true,
+                    //       ),
+                    //     );
+                    //     _messageController.clear();
+                    //   });
+                    // }
+                    _sendMessage();
                   },
                 ),
               ],
@@ -257,5 +259,48 @@ class _ChatScreenState extends State<ChatScreen> {
 
   String _formatMessageTime(DateTime timestamp) {
     return '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _sendMessage() async {
+    if (_messageController.text.trim().isEmpty) return;
+
+    final messageText = _messageController.text.trim();
+
+    // Clear the input field
+    _messageController.clear();
+
+    // Implement your encryption logic here if needed
+    final encryptedText = messageText; // Replace with actual encryption
+
+    final newMessage = Message(
+      content: messageText,
+      timestamp: DateTime.now(),
+      isEncrypted: false, // Set based on your encryption logic
+      isFromMe: true,
+    );
+
+    // Add message to the conversation immediately for UI responsiveness
+    setState(() {
+      widget.conversation.messages.add(newMessage);
+    });
+
+    // Send the SMS
+    final success = await SmsService.sendSms(
+      address: widget.conversation.contact.phoneNumber,
+      body: encryptedText, // Use encrypted text if implemented
+    );
+
+    if (!success) {
+      // Handle send failure
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to send message')));
+
+      // Optionally mark the message as failed in the UI
+      setState(() {
+        // Add a 'failed' flag to your Message class if needed
+        // widget.conversation.messages.last.failed = true;
+      });
+    }
   }
 }
