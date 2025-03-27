@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:q_messenger/services/aes_encryption.dart';
 import '../resources/data_models.dart';
 import '../services/sms_service.dart';
 
@@ -13,6 +13,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  // final Aes aes = Aes();
   final TextEditingController _messageController = TextEditingController();
   late List<Message> _messages;
   bool _isEncrypted = true;
@@ -269,8 +270,9 @@ class _ChatScreenState extends State<ChatScreen> {
     // Clear the input field
     _messageController.clear();
 
-    // Implement your encryption logic here if needed
-    final encryptedText = messageText; // Replace with actual encryption
+    final encryptedText =
+        '${Aes.encryptMessage(messageText)['ciphertext']!}|${Aes.encryptMessage(messageText)['iv']!}';
+    // final encryptedText = messageText;
 
     final newMessage = Message(
       content: messageText,

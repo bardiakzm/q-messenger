@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:q_messenger/pages/conversation_list_screen.dart';
 import 'package:q_messenger/pages/import_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async {
+  print('started loading env');
+  await dotenv.load();
+  print('loaded env');
   runApp(SecureSMSApp());
 }
 
