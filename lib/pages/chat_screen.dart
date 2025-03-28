@@ -269,9 +269,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Clear the input field
     _messageController.clear();
+    final Map<String, String> encryptedMessage = Aes.encryptMessage(
+      messageText,
+    );
 
     final encryptedText =
-        '${Aes.encryptMessage(messageText)['ciphertext']!}|${Aes.encryptMessage(messageText)['iv']!}';
+        '${encryptedMessage['tag']}:${encryptedMessage['ciphertext']}:${encryptedMessage['iv']}';
     // final encryptedText = messageText;
 
     final newMessage = Message(

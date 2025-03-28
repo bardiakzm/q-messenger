@@ -21,6 +21,7 @@ class Aes {
     return {
       'ciphertext': base64Encode(encrypted.bytes), //base 64
       'iv': base64Encode(iv.bytes), //returning iv for decrypt
+      'tag': 'qmsa1', //tag
     };
   }
 
