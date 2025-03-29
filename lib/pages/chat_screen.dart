@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:q_messenger/services/aes_encryption.dart';
 import '../resources/data_models.dart';
+import '../services/obfuscate.dart';
 import '../services/sms_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:q_messenger/services/sms_provider.dart';
@@ -291,11 +292,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final encryptedText =
         '${encryptedMessage['tag']}:${encryptedMessage['ciphertext']}:${encryptedMessage['iv']}';
 
+    final obfuscatedText = Obfuscate.obfuscateText(
+      encryptedText,
+      obfuscationMap,
+    );
     final success = await ref
         .read(smsProvider.notifier)
         .sendMessage(
           phoneNumber: widget.conversation.contact.phoneNumber,
-          text: encryptedText,
+          text: obfuscatedText,
           simSlot: 0,
         );
 

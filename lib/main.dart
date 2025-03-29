@@ -3,9 +3,11 @@ import 'package:q_messenger/pages/conversation_list_screen.dart';
 import 'package:q_messenger/pages/import_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:q_messenger/services/obfuscate.dart';
 
 void main() async {
   await dotenv.load();
+  Obfuscate.setObfuscationMap();
   runApp(ProviderScope(child: SecureSMSApp()));
 }
 
