@@ -16,6 +16,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   bool _isEncrypted = true;
 
   @override
@@ -25,8 +26,40 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.minScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    //scroll to bottom when the widget updates
+    _scrollToBottom();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final messages = ref.watch(smsProvider);
+
+    //scroll to bottom when messages change
+    if (messages.isNotEmpty) {
+      _scrollToBottom();
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -91,14 +124,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ],
             ),
           ),
-          // Messages list
+
+          ///Messages list
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: messages.length,
+              reverse: true, // This makes the list start from the bottom
               itemBuilder: (context, index) {
-                final reversedIndex = messages.length - 1 - index;
-                final message = messages[reversedIndex];
+                // With reverse: true, we don't need to calculate reversedIndex
+                final message = messages[index];
                 return _buildMessageBubble(message);
               },
             ),
@@ -161,22 +197,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 IconButton(
                   icon: Icon(Icons.send),
                   color: Colors.blue,
-                  onPressed: () {
-                    // if (_messageController.text.isNotEmpty) {
-                    //   setState(() {
-                    //     _messages.add(
-                    //       Message(
-                    //         content: _messageController.text,
-                    //         timestamp: DateTime.now(),
-                    //         isEncrypted: _isEncrypted,
-                    //         isFromMe: true,
-                    //       ),
-                    //     );
-                    //     _messageController.clear();
-                    //   });
-                    // }
-                    _sendMessage();
-                  },
+                  onPressed: _sendMessage,
                 ),
               ],
             ),
@@ -269,26 +290,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     final encryptedText =
         '${encryptedMessage['tag']}:${encryptedMessage['ciphertext']}:${encryptedMessage['iv']}';
-    // final encryptedText = messageText;
 
-    final newMessage = Message(
-      content: messageText,
-      timestamp: DateTime.now(),
-      isEncrypted: false, // Set based on your encryption logic
-      isFromMe: true,
-    );
-
-    // Add message to the conversation immediately for UI responsiveness
-    // setState(() {
-    //   widget.conversation.messages.add(newMessage);
-    // });
-
-    // Send the SMS
-    // final success = await SmsService.sendSms(
-    //   address: widget.conversation.contact.phoneNumber,
-    //   body: encryptedText, // Use encrypted text if implemented
-    //   simSlot: 0,
-    // );
     final success = await ref
         .read(smsProvider.notifier)
         .sendMessage(
@@ -296,9 +298,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           text: encryptedText,
           simSlot: 0,
         );
-    if (success) {
-      _messageController.clear();
-    } else {
+
+    if (!success) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Failed to send message')));
