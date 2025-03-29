@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:q_messenger/pages/conversation_list_screen.dart';
 import 'package:q_messenger/pages/import_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() async {
-  print('started loading env');
   await dotenv.load();
-  print('loaded env');
-  runApp(SecureSMSApp());
+  runApp(ProviderScope(child: SecureSMSApp()));
 }
 
 class SecureSMSApp extends StatelessWidget {

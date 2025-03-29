@@ -2,30 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:q_messenger/services/aes_encryption.dart';
 import '../resources/data_models.dart';
 import '../services/sms_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:q_messenger/services/sms_provider.dart';
 
-class ChatScreen extends StatefulWidget {
+class ChatScreen extends ConsumerStatefulWidget {
   final Conversation conversation;
 
-  ChatScreen({required this.conversation});
+  const ChatScreen({super.key, required this.conversation});
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
-  // final Aes aes = Aes();
+class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
-  late List<Message> _messages;
   bool _isEncrypted = true;
 
   @override
   void initState() {
     super.initState();
-    _messages = List.from(widget.conversation.messages);
+    Future.microtask(() => ref.read(smsProvider.notifier).loadMessages());
   }
 
   @override
   Widget build(BuildContext context) {
+    final messages = ref.watch(smsProvider);
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -43,12 +44,6 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.videocam_outlined),
-            onPressed: () {
-              // TODO: Implement video call
-            },
-          ),
           IconButton(
             icon: Icon(Icons.call_outlined),
             onPressed: () {
@@ -99,12 +94,11 @@ class _ChatScreenState extends State<ChatScreen> {
           // Messages list
           Expanded(
             child: ListView.builder(
-              reverse: true,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _messages.length,
+              itemCount: messages.length,
               itemBuilder: (context, index) {
-                final reversedIndex = _messages.length - 1 - index;
-                final message = _messages[reversedIndex];
+                final reversedIndex = messages.length - 1 - index;
+                final message = messages[reversedIndex];
                 return _buildMessageBubble(message);
               },
             ),
@@ -192,8 +186,8 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(Message message) {
-    final isFromMe = message.isFromMe;
+  Widget _buildMessageBubble(SmsMessage message) {
+    final bool isFromMe = message.isSent;
 
     return Align(
       alignment: isFromMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -218,7 +212,7 @@ class _ChatScreenState extends State<ChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              message.content,
+              message.body,
               style: TextStyle(color: isFromMe ? Colors.white : null),
             ),
             Row(
@@ -235,7 +229,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 Text(
-                  _formatMessageTime(message.timestamp),
+                  _formatMessageTime(message.dateTime),
                   style: TextStyle(
                     fontSize: 10,
                     color: isFromMe ? Colors.white70 : Colors.grey,
@@ -267,7 +261,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final messageText = _messageController.text.trim();
 
-    // Clear the input field
+    //clear input field
     _messageController.clear();
     final Map<String, String> encryptedMessage = Aes.encryptMessage(
       messageText,
@@ -285,28 +279,29 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     // Add message to the conversation immediately for UI responsiveness
-    setState(() {
-      widget.conversation.messages.add(newMessage);
-    });
+    // setState(() {
+    //   widget.conversation.messages.add(newMessage);
+    // });
 
     // Send the SMS
-    final success = await SmsService.sendSms(
-      address: widget.conversation.contact.phoneNumber,
-      body: encryptedText, // Use encrypted text if implemented
-      simSlot: 0,
-    );
-
-    if (!success) {
-      // Handle send failure
+    // final success = await SmsService.sendSms(
+    //   address: widget.conversation.contact.phoneNumber,
+    //   body: encryptedText, // Use encrypted text if implemented
+    //   simSlot: 0,
+    // );
+    final success = await ref
+        .read(smsProvider.notifier)
+        .sendMessage(
+          phoneNumber: widget.conversation.contact.phoneNumber,
+          text: encryptedText,
+          simSlot: 0,
+        );
+    if (success) {
+      _messageController.clear();
+    } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Failed to send message')));
-
-      // Optionally mark the message as failed in the UI
-      setState(() {
-        // Add a 'failed' flag to your Message class if needed
-        // widget.conversation.messages.last.failed = true;
-      });
+      ).showSnackBar(const SnackBar(content: Text('Failed to send message')));
     }
   }
 }

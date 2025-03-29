@@ -44,6 +44,7 @@ class SmsMessage {
   final String body;
   final int date;
   final int type; // 1 = inbox, 2 = sent, etc.
+  final bool isEncrypted;
 
   SmsMessage({
     required this.id,
@@ -51,6 +52,7 @@ class SmsMessage {
     required this.body,
     required this.date,
     required this.type,
+    this.isEncrypted = false,
   });
 
   factory SmsMessage.fromMap(Map<String, dynamic> map) {
