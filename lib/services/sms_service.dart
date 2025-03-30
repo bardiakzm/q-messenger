@@ -41,7 +41,7 @@ class SmsService {
 class SmsMessage {
   final String id;
   final String address;
-  final String body;
+  String body;
   final int date;
   final int type; // 1 = inbox, 2 = sent, etc.
   final bool isEncrypted;

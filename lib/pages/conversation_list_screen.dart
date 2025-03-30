@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:q_messenger/resources/data_models.dart';
+import '../services/aes_encryption.dart';
 import '../services/sms_provider.dart';
 import '../services/sms_service.dart';
 import 'chat_screen.dart';
-import 'package:q_messenger/services/sms_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+RegExp regex = RegExp(r'^[^:]+:([^:]+):([^:]+)$');
 // Provider for conversations based on SMS messages
 final conversationsProvider = Provider<List<Conversation>>((ref) {
   final messages = ref.watch(smsProvider);
@@ -19,6 +20,20 @@ List<Conversation> _organizeConversations(List<SmsMessage> messages) {
   Map<String, List<SmsMessage>> messagesByAddress = {};
 
   for (var message in messages) {
+    if (message.body.startsWith('qmsa1')) {
+      // message.body += 'ENCRYPTED BY QM';
+      Match? match = regex.firstMatch(message.body);
+      String? iv = match?.group(2)!;
+      // print('found an iv $iv');
+      String? encryptedText = match?.group(1)!;
+      // print('found the body $encryptedText');
+      if (iv != null) {
+        final decryptedText = Aes.decryptMessage(encryptedText!, iv);
+        message.body = decryptedText;
+      }
+
+      // message.body += ' iv is:$iv and body is:$encryptedText';
+    }
     if (!messagesByAddress.containsKey(message.address)) {
       messagesByAddress[message.address] = [];
     }

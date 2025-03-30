@@ -233,7 +233,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            SelectableText(
               message.body,
               style: TextStyle(color: isFromMe ? Colors.white : null),
             ),
@@ -300,7 +300,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         .read(smsProvider.notifier)
         .sendMessage(
           phoneNumber: widget.conversation.contact.phoneNumber,
-          text: obfuscatedText,
+          text: encryptedText,
           simSlot: 0,
         );
 
