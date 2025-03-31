@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:q_messenger/resources/data_models.dart';
+import 'package:q_messenger/services/obfuscate.dart';
 import '../services/aes_encryption.dart';
 import '../services/sms_provider.dart';
 import '../services/sms_service.dart';
@@ -20,20 +21,38 @@ List<Conversation> _organizeConversations(List<SmsMessage> messages) {
   Map<String, List<SmsMessage>> messagesByAddress = {};
 
   for (var message in messages) {
-    if (message.body.startsWith('qmsa1')) {
-      // message.body += 'ENCRYPTED BY QM';
-      Match? match = regex.firstMatch(message.body);
+    if (message.body.startsWith('زکطه2')) {
+      final String deobfuscatedText = Obfuscate.deobfuscateText(
+        message.body,
+        obfuscationMap,
+      );
+      message.body = deobfuscatedText;
+
+      Match? match = regex.firstMatch(deobfuscatedText);
       String? iv = match?.group(2)!;
-      // print('found an iv $iv');
       String? encryptedText = match?.group(1)!;
-      // print('found the body $encryptedText');
       if (iv != null) {
         final decryptedText = Aes.decryptMessage(encryptedText!, iv);
         message.body = decryptedText;
       }
 
-      // message.body += ' iv is:$iv and body is:$encryptedText';
+      // message.body += 'ENCRYPTED BY QM';
+
+      // print('found the body $encryptedText');
     }
+    // if (message.body.startsWith('qmsa1')) {
+    //   // message.body += 'ENCRYPTED BY QM';
+    //   Match? match = regex.firstMatch(message.body);
+    //   String? iv = match?.group(2)!;
+    //   // print('found an iv $iv');
+    //   String? encryptedText = match?.group(1)!;
+    //   // print('found the body $encryptedText');
+    //   if (iv != null) {
+    //     final decryptedText = Aes.decryptMessage(encryptedText!, iv);
+    //     message.body = decryptedText;
+    //   }
+    //   // message.body += ' iv is:$iv and body is:$encryptedText';
+    // }
     if (!messagesByAddress.containsKey(message.address)) {
       messagesByAddress[message.address] = [];
     }

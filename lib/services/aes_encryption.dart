@@ -11,32 +11,51 @@ class Aes {
   ///Encrypt
   static Map<String, String> encryptMessage(String plaintext) {
     final compressed = _compress(utf8.encode(plaintext));
-    final iv = encrypt.IV.fromLength(16); //random iv
+    final iv = encrypt.IV.fromLength(16);
 
     final encrypter = encrypt.Encrypter(
       encrypt.AES(_key, mode: encrypt.AESMode.cbc),
     );
     final encrypted = encrypter.encryptBytes(compressed, iv: iv);
 
-    return {
-      'ciphertext': base64Encode(encrypted.bytes), //base 64
-      'iv': base64Encode(iv.bytes), //returning iv for decrypt
-      'tag': 'qmsa1', //tag
-    };
+    // Use hex encoding instead of Base64
+    final hexEncrypted = encrypted.bytes
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join('');
+    final hexIV = iv.bytes
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join('');
+
+    return {'ciphertext': hexEncrypted, 'iv': hexIV, 'tag': 'qmsa2'};
   }
 
-  ///Decrypts
-  static String decryptMessage(String ciphertext, String ivBase64) {
-    final iv = encrypt.IV.fromBase64(ivBase64);
-    final encryptedBytes = base64Decode(ciphertext); //reverse b64
+  static String decryptMessage(String hexCiphertext, String hexIV) {
+    // Convert hex back to bytes
+    final encryptedBytes = Uint8List.fromList(
+      List.generate(
+        hexCiphertext.length ~/ 2,
+        (i) => int.parse(hexCiphertext.substring(i * 2, i * 2 + 2), radix: 16),
+      ),
+    );
+
+    final ivBytes = Uint8List.fromList(
+      List.generate(
+        hexIV.length ~/ 2,
+        (i) => int.parse(hexIV.substring(i * 2, i * 2 + 2), radix: 16),
+      ),
+    );
+
+    final iv = encrypt.IV(ivBytes);
 
     final encrypter = encrypt.Encrypter(
       encrypt.AES(_key, mode: encrypt.AESMode.cbc),
     );
+
     final decrypted = encrypter.decryptBytes(
       encrypt.Encrypted(encryptedBytes),
       iv: iv,
     );
+
     return utf8.decode(_decompress(decrypted));
   }
 

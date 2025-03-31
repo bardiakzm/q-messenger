@@ -300,7 +300,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         .read(smsProvider.notifier)
         .sendMessage(
           phoneNumber: widget.conversation.contact.phoneNumber,
-          text: encryptedText,
+          text: obfuscatedText,
           simSlot: 0,
         );
 
