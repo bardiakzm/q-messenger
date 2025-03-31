@@ -2,10 +2,11 @@
 
 ⚠️ **Disclaimer**: This tool is intended for legitimate privacy and security purposes. Users are responsible for complying with all applicable laws regarding encryption and communication in their jurisdiction.
 
-A secure SMS messaging solution designed for communication in internet-restricted environments.
+
 
 ## Overview
 
+A secure SMS messaging solution designed for communication in internet-restricted environments.
 QMessage is a Flutter-based application that enables secure communication through SMS when internet access is limited or unavailable. It employs multiple layers of security to protect your messages from unwanted surveillance.
 
 ## Features
