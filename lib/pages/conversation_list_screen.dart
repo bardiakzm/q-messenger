@@ -119,20 +119,37 @@ class _ConversationListScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _requestPermissionAndLoadMessages();
+      _requestPermissionsAndLoadMessages();
     });
   }
 
-  Future<void> _requestPermissionAndLoadMessages() async {
+  Future<void> _requestPermissionsAndLoadMessages() async {
     ref.read(loadingProvider.notifier).state = true;
 
-    var status = await Permission.sms.status;
-    if (!status.isGranted) {
-      status = await Permission.sms.request();
-      if (!status.isGranted) {
+    //request SMS permissions
+    var smsStatus = await Permission.sms.status;
+    if (!smsStatus.isGranted) {
+      smsStatus = await Permission.sms.request();
+      if (!smsStatus.isGranted) {
         ref.read(loadingProvider.notifier).state = false;
+        //TODO req message here
         return;
       }
+    }
+
+    // Request phone state permission
+    var phoneStatus = await Permission.phone.status;
+    if (!phoneStatus.isGranted) {
+      phoneStatus = await Permission.phone.request();
+      if (!phoneStatus.isGranted) {
+        //TODO handle phone perm not granted
+      }
+    }
+
+    var sendSmsStatus = await Permission.sms.status;
+    if (!sendSmsStatus.isGranted) {
+      sendSmsStatus = await Permission.sms.request();
+      //TODO handle phone perm not granted
     }
 
     await ref.read(smsProvider.notifier).loadMessages();
@@ -171,7 +188,7 @@ class _ConversationListScreenState
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _requestPermissionAndLoadMessages,
+            onPressed: _requestPermissionsAndLoadMessages,
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
