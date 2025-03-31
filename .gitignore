@@ -47,6 +47,7 @@ app.*.map.json
 .env
 
 
-macos
-windows
-linux
+
+/windows/
+/macos/
+/linux/
