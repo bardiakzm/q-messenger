@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:q_messenger/resources/data_models.dart';
+import 'package:q_messenger/services/crypto.dart';
 import 'package:q_messenger/services/obfuscate.dart';
 import '../services/aes_encryption.dart';
 import '../services/sms_provider.dart';
@@ -21,10 +22,13 @@ List<Conversation> _organizeConversations(List<SmsMessage> messages) {
   Map<String, List<SmsMessage>> messagesByAddress = {};
 
   for (var message in messages) {
-    if (message.body.startsWith('qmsa2')) {
+    final String tag = 'qmsa2';
+    final String tHash = Crypto.generateTagHash(tag);
+    final String obfsedTHash = Obfuscate.obfuscateFA1Tag(tHash);
+    if (message.body.startsWith(obfsedTHash)) {
       final String deobfuscatedText = Obfuscate.deobfuscateText(
         message.body,
-        obfuscationMap,
+        obfuscationFA2Map,
       );
       message.body = deobfuscatedText;
 

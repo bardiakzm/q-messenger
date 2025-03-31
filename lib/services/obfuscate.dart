@@ -1,9 +1,10 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-Map<String, String> obfuscationMap = {};
+Map<String, String> obfuscationFA2Map = {};
+Map<String, String> obfuscationFA1Map = {};
 
 class Obfuscate {
-  static Map<String, String> loadObfuscationMap() {
+  static Map<String, String> loadObfuscationFA2Map() {
     return Map.fromEntries(
       dotenv.env.entries
           .where(
@@ -16,8 +17,33 @@ class Obfuscate {
     );
   }
 
-  static void setObfuscationMap() {
-    obfuscationMap = loadObfuscationMap();
+  static Map<String, String> loadObfuscationFA1Map() {
+    return Map.fromEntries(
+      dotenv.env.entries
+          .where(
+            (entry) => entry.key.startsWith("OBF_FA1_"),
+          ) // Filter obfuscation keys
+          .map(
+            (entry) =>
+                MapEntry(entry.key.substring(8).toLowerCase(), entry.value),
+          ), // Remove "OBF_FA2_" prefix
+    );
+  }
+
+  static void setObfuscationFA2Map() {
+    obfuscationFA2Map = loadObfuscationFA2Map();
+  }
+
+  static void setObfuscationFA1Map() {
+    obfuscationFA1Map = loadObfuscationFA1Map();
+  }
+
+  static String obfuscateFA1Tag(String tag) {
+    final obfuscatedTag = tag
+        .split('')
+        .map((char) => obfuscationFA1Map[char.toLowerCase()] ?? char)
+        .join(''); //no space between words for tag
+    return obfuscatedTag;
   }
 
   static String obfuscateText(String text, Map<String, String> obfuscationMap) {

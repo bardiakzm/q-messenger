@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:q_messenger/services/aes_encryption.dart';
 import '../resources/data_models.dart';
+import '../services/crypto.dart';
 import '../services/obfuscate.dart';
 import '../services/sms_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -289,12 +290,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       messageText,
     );
 
+    final String tHash = Crypto.generateTagHash(encryptedMessage['tag']!);
+    final String obfsedTHash = Obfuscate.obfuscateFA1Tag(tHash);
+
     final encryptedText =
-        '${encryptedMessage['tag']}:${encryptedMessage['ciphertext']}:${encryptedMessage['iv']}';
+        '$obfsedTHash:${encryptedMessage['ciphertext']}:${encryptedMessage['iv']}';
 
     final obfuscatedText = Obfuscate.obfuscateText(
       encryptedText,
-      obfuscationMap,
+      obfuscationFA2Map,
     );
     final success = await ref
         .read(smsProvider.notifier)

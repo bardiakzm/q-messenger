@@ -7,7 +7,8 @@ import 'package:q_messenger/services/obfuscate.dart';
 
 void main() async {
   await dotenv.load();
-  Obfuscate.setObfuscationMap();
+  Obfuscate.setObfuscationFA2Map();
+  Obfuscate.setObfuscationFA1Map();
   runApp(ProviderScope(child: SecureSMSApp()));
 }
 
