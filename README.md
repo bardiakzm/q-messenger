@@ -28,20 +28,6 @@ Secure messaging in regions with internet restrictions
 Backup communication channel when primary methods are unavailable
 Privacy-focused conversations
 
-Getting Started
-bashCopy# Clone the repository
-git clone https://github.com/your-username/qmessage.git
-
-# Navigate to the project directory
-cd qmessage
-
-# Install dependencies
-flutter pub get
-
-# Run the application
-flutter run
-Roadmap
-
  Add symmetric encryption options
  Implement additional obfuscation techniques
  Improve key management system
