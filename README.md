@@ -11,8 +11,8 @@ QMessage is a Flutter-based application that enables secure communication throug
 
 ## Features
 
-- **AES Encryption**: Military-grade encryption to secure your message content
-- **Persian Word-based Obfuscation**: Additional security layer that masks message content
+- **AES Encryption**: AES-CBC encryption to secure message content
+- **Word-based Obfuscation**: Additional security layer that masks message content
 - **Offline Operation**: Works entirely without internet connection
 - **Lightweight Design**: Minimal resource usage for optimal performance
 
