@@ -21,7 +21,7 @@ List<Conversation> _organizeConversations(List<SmsMessage> messages) {
   Map<String, List<SmsMessage>> messagesByAddress = {};
 
   for (var message in messages) {
-    if (message.body.startsWith('زکطه2')) {
+    if (message.body.startsWith('qmsa2')) {
       final String deobfuscatedText = Obfuscate.deobfuscateText(
         message.body,
         obfuscationMap,
