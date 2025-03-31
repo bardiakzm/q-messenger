@@ -18,7 +18,6 @@ class Aes {
     );
     final encrypted = encrypter.encryptBytes(compressed, iv: iv);
 
-    // Use hex encoding instead of Base64
     final hexEncrypted = encrypted.bytes
         .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
         .join('');
