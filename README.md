@@ -1,4 +1,4 @@
-# qMessage
+# qMessenger
 
 ⚠️ **Disclaimer**: This tool is intended for legitimate privacy and security purposes. Users are responsible for complying with all applicable laws regarding encryption and communication in their jurisdiction.
 
