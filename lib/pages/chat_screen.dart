@@ -307,7 +307,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           text: obfuscatedText,
           simSlot: 0,
         );
-    ref.read(smsProvider.notifier).loadMessages();
+    await ref.read(smsProvider.notifier).loadMessages();
     if (!success) {
       ScaffoldMessenger.of(
         context,
