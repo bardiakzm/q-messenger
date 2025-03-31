@@ -6,7 +6,7 @@ class Contact {
   Contact({required this.name, required this.phoneNumber});
 }
 
-class Message {
+class Message { //replaced by SmsMessage in sms_service.dart
   final String content;
   final DateTime timestamp;
   final bool isEncrypted;
