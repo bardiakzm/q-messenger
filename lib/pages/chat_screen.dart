@@ -141,11 +141,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ///Messages list
           Expanded(
             child: ListView.builder(
+              // reverse: true,
               controller: _scrollController,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: conversationMessages.length,
               itemBuilder: (context, index) {
-                // With reverse: true, we don't need to calculate reversedIndex
                 final message = conversationMessages[index];
                 return _buildMessageBubble(message);
               },
