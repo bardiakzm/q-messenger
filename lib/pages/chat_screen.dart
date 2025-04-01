@@ -4,7 +4,6 @@ import '../resources/data_models.dart';
 import '../services/conversation_provider.dart';
 import '../services/crypto.dart';
 import '../services/obfuscate.dart';
-import '../services/sms_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:q_messenger/services/sms_provider.dart';
 
