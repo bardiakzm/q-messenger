@@ -13,7 +13,7 @@
 
 
     <application
-        android:label="q_messenger"
+        android:label="qMessenger"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
