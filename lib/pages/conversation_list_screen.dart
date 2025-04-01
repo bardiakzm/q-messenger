@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:q_messenger/resources/data_models.dart';
-import 'package:q_messenger/services/crypto.dart';
-import 'package:q_messenger/services/obfuscate.dart';
-import '../services/aes_encryption.dart';
 import '../services/conversation_provider.dart';
 import '../services/sms_provider.dart';
-import '../services/sms_service.dart';
 import 'chat_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 
