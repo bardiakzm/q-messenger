@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:q_messenger/services/aes_encryption.dart';
 import '../resources/data_models.dart';
+import '../services/conversation_provider.dart';
 import '../services/crypto.dart';
 import '../services/obfuscate.dart';
 import '../services/sms_service.dart';
@@ -38,7 +39,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
-          _scrollController.position.minScrollExtent,
+          _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
@@ -55,10 +56,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final messages = ref.watch(smsProvider);
+    // final messages = ref.watch(smsProvider);
+    final conversations = ref.watch(conversationsProvider);
+
+    //find the current conversation from the global list
+    final currentConversation = conversations.firstWhere(
+      (c) => c.contact.phoneNumber == widget.conversation.contact.phoneNumber,
+      orElse: () => widget.conversation,
+    );
+
+    //get messages from the current conversation
+    final conversationMessages = currentConversation.messages;
 
     //scroll to bottom when messages change
-    if (messages.isNotEmpty) {
+    if (conversationMessages.isNotEmpty) {
       _scrollToBottom();
     }
 
@@ -70,12 +81,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               backgroundColor: Colors.blue.shade200,
               radius: 16,
               child: Text(
-                widget.conversation.contact.name[0],
+                currentConversation.contact.name[0],
                 style: TextStyle(color: Colors.blue.shade800, fontSize: 14),
               ),
             ),
             SizedBox(width: 8),
-            Text(widget.conversation.contact.name),
+            Text(currentConversation.contact.name),
           ],
         ),
         actions: [
@@ -132,11 +143,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: ListView.builder(
               controller: _scrollController,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: messages.length,
-              reverse: true, // This makes the list start from the bottom
+              itemCount: conversationMessages.length,
               itemBuilder: (context, index) {
                 // With reverse: true, we don't need to calculate reversedIndex
-                final message = messages[index];
+                final message = conversationMessages[index];
                 return _buildMessageBubble(message);
               },
             ),
@@ -209,8 +219,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(SmsMessage message) {
-    final bool isFromMe = message.isSent;
+  Widget _buildMessageBubble(Message message) {
+    final bool isFromMe = message.isFromMe;
 
     return Align(
       alignment: isFromMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -235,7 +245,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SelectableText(
-              message.body,
+              message.content,
               style: TextStyle(color: isFromMe ? Colors.white : null),
             ),
             Row(
@@ -252,7 +262,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   ),
                 Text(
-                  _formatMessageTime(message.dateTime),
+                  _formatMessageTime(message.timestamp),
                   style: TextStyle(
                     fontSize: 10,
                     color: isFromMe ? Colors.white70 : Colors.grey,
