@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../resources/data_models.dart';
 import '../services/conversation_provider.dart';
 import '../services/sms_provider.dart';
 import 'chat_screen.dart';
@@ -7,6 +8,35 @@ import 'package:permission_handler/permission_handler.dart';
 
 // Loading state provider
 final loadingProvider = StateProvider<bool>((ref) => false);
+
+//search provider
+final searchQueryProvider = StateProvider<String>((ref) => '');
+
+// Filtered conversations provider
+final filteredConversationsProvider = Provider<List<Conversation>>((ref) {
+  final conversations = ref.watch(conversationsProvider);
+  final searchQuery = ref.watch(searchQueryProvider).toLowerCase();
+
+  if (searchQuery.isEmpty) {
+    return conversations;
+  }
+
+  return conversations.where((conversation) {
+    // Search by contact name
+    if (conversation.contact.name.toLowerCase().contains(searchQuery)) {
+      return true;
+    }
+
+    // Search by message content
+    for (final message in conversation.messages) {
+      if (message.content.toLowerCase().contains(searchQuery)) {
+        return true;
+      }
+    }
+
+    return false;
+  }).toList();
+});
 
 class ConversationListScreen extends ConsumerStatefulWidget {
   const ConversationListScreen({super.key});
@@ -18,11 +48,29 @@ class ConversationListScreen extends ConsumerStatefulWidget {
 
 class _ConversationListScreenState
     extends ConsumerState<ConversationListScreen> {
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
+    // _searchController.dispose();
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _requestPermissionsAndLoadMessages();
+    });
+  }
+
+  void _startSearch() {
+    setState(() {
+      _isSearching = true;
+    });
+  }
+
+  void _endSearch() {
+    setState(() {
+      _isSearching = false;
+      _searchController.clear();
+      ref.read(searchQueryProvider.notifier).state = '';
     });
   }
 
@@ -74,21 +122,42 @@ class _ConversationListScreenState
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final conversations = ref.watch(conversationsProvider);
-    final isLoading = ref.watch(loadingProvider);
-
-    return Scaffold(
-      appBar: AppBar(
+  AppBar _buildAppBar() {
+    if (_isSearching) {
+      return AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _endSearch,
+        ),
+        title: TextField(
+          controller: _searchController,
+          decoration: const InputDecoration(
+            hintText: 'Search by name or message...',
+            border: InputBorder.none,
+          ),
+          autofocus: true,
+          onChanged: (value) {
+            ref.read(searchQueryProvider.notifier).state = value;
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              _searchController.clear();
+              ref.read(searchQueryProvider.notifier).state = '';
+            },
+          ),
+        ],
+      );
+    } else {
+      return AppBar(
         title: const Text('Messages'),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
-            onPressed: () {
-              // TODO: Implement search functionality
-            },
-          ),
+            onPressed: _startSearch,
+          ), //TODO complete search function
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _requestPermissionsAndLoadMessages,
@@ -100,15 +169,34 @@ class _ConversationListScreenState
             },
           ),
         ],
-      ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredConversations = ref.watch(filteredConversationsProvider);
+    final isLoading = ref.watch(loadingProvider);
+
+    return Scaffold(
+      appBar: _buildAppBar(),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
+              : filteredConversations.isEmpty
+              ? Center(
+                child: Text(
+                  _isSearching
+                      ? 'No results found for "${_searchController.text}"'
+                      : 'No conversations',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              )
               : ListView.separated(
-                itemCount: conversations.length,
+                itemCount: filteredConversations.length,
                 separatorBuilder: (context, index) => const Divider(height: 1),
                 itemBuilder: (context, index) {
-                  final conversation = conversations[index];
+                  final conversation = filteredConversations[index];
                   if (conversation.messages.isEmpty) {
                     return const SizedBox.shrink(); // Skip empty conversations
                   }

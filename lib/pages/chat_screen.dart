@@ -90,12 +90,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.call_outlined),
-            onPressed: () {
-              // TODO: Implement call
-            },
-          ),
-          IconButton(
             icon: Icon(Icons.more_vert),
             onPressed: () {
               // TODO: Implement menu
@@ -208,7 +202,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 IconButton(
                   icon: Icon(Icons.send),
                   color: Colors.blue,
-                  onPressed: _sendMessage,
+                  onPressed:
+                      _isEncrypted ? _sendEncryptedMessage : _sendMessage,
                 ),
               ],
             ),
@@ -289,6 +284,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
+    if (_messageController.text.trim().isEmpty) return;
+    final messageText = _messageController.text.trim();
+
+    _messageController.clear();
+
+    final success = await ref
+        .read(smsProvider.notifier)
+        .sendMessage(
+          phoneNumber: widget.conversation.contact.phoneNumber,
+          text: messageText,
+          simSlot: 0,
+        );
+    await ref.read(smsProvider.notifier).loadMessages();
+    if (!success) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to send message')));
+    }
+  }
+
+  Future<void> _sendEncryptedMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
     final messageText = _messageController.text.trim();
