@@ -66,10 +66,7 @@ List<Conversation> _organizeConversations(List<SmsMessage> messages) {
 
     conversations.add(
       Conversation(
-        contact: Contact(
-          name: contactName, // Ideally, look up the contact name if possible
-          phoneNumber: address,
-        ),
+        contact: Contact(name: contactName, phoneNumber: address),
         messages: formattedMessages,
       ),
     );

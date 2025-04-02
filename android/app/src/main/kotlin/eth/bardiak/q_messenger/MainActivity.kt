@@ -1,11 +1,5 @@
 package eth.bardiak.q_messenger
 
-//import io.flutter.embedding.android.FlutterActivity
-//
-//class MainActivity : FlutterActivity()
-
-
-
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -18,8 +12,7 @@ import androidx.core.content.ContextCompat
 import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
 import android.provider.ContactsContract
-
-
+import android.net.Uri
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "eth.bardiak.q_messenger/sms_service"
@@ -30,16 +23,20 @@ class MainActivity: FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "getAllSms" -> {
-                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS)
-                        == PackageManager.PERMISSION_GRANTED) {
+                    val requiredPermissions = arrayOf(
+                        Manifest.permission.READ_SMS,
+                        Manifest.permission.READ_CONTACTS
+                    )
+
+                    if (hasPermissions(requiredPermissions)) {
                         result.success(getAllSms())
                     } else {
                         ActivityCompat.requestPermissions(
                             activity,
-                            arrayOf(Manifest.permission.READ_SMS),
+                            requiredPermissions,
                             100
                         )
-                        result.error("PERMISSION_DENIED", "READ_SMS permission required", null)
+                        result.error("PERMISSION_DENIED", "READ_SMS and READ_CONTACTS permissions required", null)
                     }
                 }
                 "sendSms" -> {
@@ -69,36 +66,21 @@ class MainActivity: FlutterActivity() {
                         result.error("PERMISSION_DENIED", "SEND_SMS permission required", null)
                     }
                 }
-
                 else -> {
                     result.notImplemented()
                 }
-
             }
         }
     }
 
-    private fun getContactName(phoneNumber: String): String? {
-        val uri = ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
-            .appendPath(phoneNumber)
-            .build()
-
-        val cursor = contentResolver.query(
-            uri,
-            arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME),
-            null,
-            null,
-            null
-        )
-
-        cursor?.use {
-            if (it.moveToFirst()) {
-                return it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
+    private fun hasPermissions(permissions: Array<String>): Boolean {
+        for (permission in permissions) {
+            if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false
             }
         }
-        return null
+        return true
     }
-
 
     private fun sendSms(address: String, body: String, simSlot: Int = 0) {
         try {
@@ -121,8 +103,58 @@ class MainActivity: FlutterActivity() {
         }
     }
 
+    private fun getContactsMap(): Map<String, String> {
+        val contactsMap = mutableMapOf<String, String>()
+
+        //exit early if no contacts permission
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS)
+            != PackageManager.PERMISSION_GRANTED) {
+            return contactsMap
+        }
+
+        val cursor = contentResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            arrayOf(
+                ContactsContract.CommonDataKinds.Phone.NUMBER,
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+            ),
+            null,
+            null,
+            null
+        )
+
+        cursor?.use {
+            val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+            val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+
+            while (it.moveToNext()) {
+                val phoneNumber = it.getString(numberIndex)
+                val name = it.getString(nameIndex)
+
+                // Normalize phone number for better matching
+                val normalizedNumber = normalizePhoneNumber(phoneNumber)
+                contactsMap[normalizedNumber] = name
+            }
+        }
+
+        return contactsMap
+    }
+
+    private fun normalizePhoneNumber(phoneNumber: String): String {
+        // Remove all non-digit characters except the leading +
+        return if (phoneNumber.startsWith("+")) {
+            "+" + phoneNumber.substring(1).replace(Regex("\\D"), "")
+        } else {
+            phoneNumber.replace(Regex("\\D"), "")
+        }
+    }
+
     private fun getAllSms(): List<Map<String, Any>> {
         val smsList = mutableListOf<Map<String, Any>>()
+
+        //get all contacts
+        val contactsMap = getContactsMap()
+
         val cursor: Cursor? = contentResolver.query(
             Telephony.Sms.CONTENT_URI,
             arrayOf(
@@ -144,7 +176,11 @@ class MainActivity: FlutterActivity() {
                 val body = it.getString(it.getColumnIndexOrThrow(Telephony.Sms.BODY))
                 val date = it.getLong(it.getColumnIndexOrThrow(Telephony.Sms.DATE))
                 val type = it.getInt(it.getColumnIndexOrThrow(Telephony.Sms.TYPE))
-                val senderName = getContactName(address) ?: "Unknown"
+
+                //normalize the phone number for matching
+                val normalizedAddress = normalizePhoneNumber(address)
+                //lookup contact name from pre-loaded map
+                val contactName = contactsMap[normalizedAddress] ?: "Unknown"
 
                 smsList.add(mapOf(
                     "id" to id,
@@ -152,7 +188,7 @@ class MainActivity: FlutterActivity() {
                     "body" to body,
                     "date" to date,
                     "type" to type,
-                    "senderName" to senderName,
+                    "senderName" to contactName
                 ))
             }
         }
