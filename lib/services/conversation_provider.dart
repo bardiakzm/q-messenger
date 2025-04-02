@@ -37,19 +37,6 @@ List<Conversation> _organizeConversations(List<SmsMessage> messages) {
       }
     }
 
-    // if (message.body.startsWith('qmsa1')) {
-    //   // message.body += 'ENCRYPTED BY QM';
-    //   Match? match = regex.firstMatch(message.body);
-    //   String? iv = match?.group(2)!;
-    //   // print('found an iv $iv');
-    //   String? encryptedText = match?.group(1)!;
-    //   // print('found the body $encryptedText');
-    //   if (iv != null) {
-    //     final decryptedText = Aes.decryptMessage(encryptedText!, iv);
-    //     message.body = decryptedText;
-    //   }
-    //   // message.body += ' iv is:$iv and body is:$encryptedText';
-    // }
     if (!messagesByAddress.containsKey(message.address)) {
       messagesByAddress[message.address] = [];
     }
@@ -72,10 +59,15 @@ List<Conversation> _organizeConversations(List<SmsMessage> messages) {
             )
             .toList();
 
+    String contactName =
+        messages.first.senderName != 'Unknown'
+            ? messages.first.senderName
+            : address;
+
     conversations.add(
       Conversation(
         contact: Contact(
-          name: address, // Ideally, look up the contact name if possible
+          name: contactName, // Ideally, look up the contact name if possible
           phoneNumber: address,
         ),
         messages: formattedMessages,

@@ -39,6 +39,7 @@ class SmsService {
 }
 
 class SmsMessage {
+  final String senderName;
   final String id;
   final String address;
   String body;
@@ -47,6 +48,7 @@ class SmsMessage {
   final bool isEncrypted;
 
   SmsMessage({
+    required this.senderName,
     required this.id,
     required this.address,
     required this.body,
@@ -62,6 +64,7 @@ class SmsMessage {
       body: map['body'] ?? '',
       date: map['date'] ?? 0,
       type: map['type'] ?? 0,
+      senderName: map['senderName'] ?? '',
     );
   }
 

@@ -77,7 +77,7 @@ class _ConversationListScreenState
   Future<void> _requestPermissionsAndLoadMessages() async {
     ref.read(loadingProvider.notifier).state = true;
 
-    //request SMS permissions
+    ///SMS permissions
     var smsStatus = await Permission.sms.status;
     if (!smsStatus.isGranted) {
       smsStatus = await Permission.sms.request();
@@ -88,7 +88,7 @@ class _ConversationListScreenState
       }
     }
 
-    // Request phone state permission
+    ///phone state permission
     var phoneStatus = await Permission.phone.status;
     if (!phoneStatus.isGranted) {
       phoneStatus = await Permission.phone.request();
@@ -97,10 +97,20 @@ class _ConversationListScreenState
       }
     }
 
+    /// send SMS perm
     var sendSmsStatus = await Permission.sms.status;
     if (!sendSmsStatus.isGranted) {
       sendSmsStatus = await Permission.sms.request();
       //TODO handle phone perm not granted
+    }
+
+    ///contact perm
+    var contactsStatus = await Permission.contacts.status;
+    if (!contactsStatus.isGranted) {
+      contactsStatus = await Permission.contacts.request();
+      if (!contactsStatus.isGranted) {
+        return;
+      }
     }
 
     await ref.read(smsProvider.notifier).loadMessages();

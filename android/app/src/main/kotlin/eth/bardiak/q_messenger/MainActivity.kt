@@ -17,6 +17,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
+import android.provider.ContactsContract
 
 
 
@@ -77,6 +78,28 @@ class MainActivity: FlutterActivity() {
         }
     }
 
+    private fun getContactName(phoneNumber: String): String? {
+        val uri = ContactsContract.PhoneLookup.CONTENT_FILTER_URI.buildUpon()
+            .appendPath(phoneNumber)
+            .build()
+
+        val cursor = contentResolver.query(
+            uri,
+            arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME),
+            null,
+            null,
+            null
+        )
+
+        cursor?.use {
+            if (it.moveToFirst()) {
+                return it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
+            }
+        }
+        return null
+    }
+
+
     private fun sendSms(address: String, body: String, simSlot: Int = 0) {
         try {
             val subscriptionManager = getSystemService(SubscriptionManager::class.java)
@@ -121,13 +144,15 @@ class MainActivity: FlutterActivity() {
                 val body = it.getString(it.getColumnIndexOrThrow(Telephony.Sms.BODY))
                 val date = it.getLong(it.getColumnIndexOrThrow(Telephony.Sms.DATE))
                 val type = it.getInt(it.getColumnIndexOrThrow(Telephony.Sms.TYPE))
+                val senderName = getContactName(address) ?: "Unknown"
 
                 smsList.add(mapOf(
                     "id" to id,
                     "address" to address,
                     "body" to body,
                     "date" to date,
-                    "type" to type
+                    "type" to type,
+                    "senderName" to senderName,
                 ))
             }
         }
