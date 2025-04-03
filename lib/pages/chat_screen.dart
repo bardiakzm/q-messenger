@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_number/sim_card.dart';
 import 'package:q_messenger/services/aes_encryption.dart';
 import '../resources/data_models.dart';
 import '../services/conversation_provider.dart';
@@ -6,6 +7,8 @@ import '../services/crypto.dart';
 import '../services/obfuscate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:q_messenger/services/sms_provider.dart';
+import 'package:q_messenger/resources/widgets/sim_numbered_icon.dart';
+import '../services/simcard_manager.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final Conversation conversation;
@@ -58,6 +61,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // final messages = ref.watch(smsProvider);
     final conversations = ref.watch(conversationsProvider);
 
+    final simCards = ref.watch(simCardProvider);
+    final selectedSim = ref.watch(selectedSimProvider);
+
     //find the current conversation from the global list
     final currentConversation = conversations.firstWhere(
       (c) => c.contact.phoneNumber == widget.conversation.contact.phoneNumber,
@@ -89,6 +95,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: Icon(
+              _isEncrypted ? Icons.lock : Icons.lock_open,
+              color: _isEncrypted ? Colors.green : Colors.amber,
+            ),
+            onPressed: () {
+              setState(() {
+                _isEncrypted = !_isEncrypted;
+              });
+            },
+          ),
           IconButton(
             icon: Icon(Icons.more_vert),
             onPressed: () {
@@ -146,7 +163,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           // Message composer
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: EdgeInsets.only(right: 8, top: 4, bottom: 4, left: 10),
             decoration: BoxDecoration(
               color: Theme.of(context).scaffoldBackgroundColor,
               boxShadow: [
@@ -159,12 +176,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             child: Row(
               children: [
-                IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: () {
-                    // TODO: Implement attachment
-                  },
-                ),
                 Expanded(
                   child: TextField(
                     controller: _messageController,
@@ -188,17 +199,58 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     maxLines: 6,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    _isEncrypted ? Icons.lock : Icons.lock_open,
-                    color: _isEncrypted ? Colors.green : Colors.amber,
+                PopupMenuButton<int>(
+                  icon: Icon(Icons.sim_card, color: Colors.blueGrey),
+                  elevation: 6, // Add a soft shadow effect
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12), // Rounded corners
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isEncrypted = !_isEncrypted;
-                    });
+                  itemBuilder: (BuildContext context) {
+                    return [
+                      for (int index = 0; index < simCards.length; index++) ...[
+                        PopupMenuItem<int>(
+                          value: index,
+                          child: Row(
+                            children: [
+                              Icon(
+                                selectedSim == index
+                                    ? Icons.check_circle
+                                    : Icons.radio_button_unchecked,
+                                color:
+                                    selectedSim == index
+                                        ? Colors.blue
+                                        : Colors.grey,
+                              ),
+                              SizedBox(width: 10),
+                              // SimCardIcon(simNumber: index),  //TODO
+                              Expanded(
+                                child: Text(
+                                  simCards[index].carrierName ?? 'SIM $index',
+                                  style: TextStyle(
+                                    fontWeight:
+                                        selectedSim == index
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                    color:
+                                        selectedSim == index
+                                            ? Colors.blue
+                                            : Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (index < simCards.length - 1)
+                          const PopupMenuDivider(), // Adds a line between items
+                      ],
+                    ];
+                  },
+                  onSelected: (int index) {
+                    ref.read(selectedSimProvider.notifier).state = index;
                   },
                 ),
+
                 IconButton(
                   icon: Icon(Icons.send),
                   color: Colors.blue,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../resources/data_models.dart';
 import '../services/conversation_provider.dart';
+import '../services/simcard_manager.dart';
 import '../services/sms_provider.dart';
 import 'chat_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -187,6 +188,7 @@ class _ConversationListScreenState
   Widget build(BuildContext context) {
     final filteredConversations = ref.watch(filteredConversationsProvider);
     final isLoading = ref.watch(loadingProvider);
+    ref.watch(loadSimProvider);
 
     return Scaffold(
       appBar: _buildAppBar(),
@@ -259,8 +261,6 @@ class _ConversationListScreenState
                                   ChatScreen(conversation: conversation),
                         ),
                       ).then((_) {
-                        // Refresh messages when returning from chat screen
-                        // This ensures we show any new messages that were sent
                         ref.read(smsProvider.notifier).loadMessages();
                       });
                     },
