@@ -9,12 +9,8 @@ class SimManager {
   static Future<List<SimCard>> getSimCards() async {
     print('getting sim info');
 
-    // Request multiple permissions
     Map<Permission, PermissionStatus> statuses =
-        await [
-          Permission.phone,
-          Permission.contacts, // Some devices need this for SIM access
-        ].request();
+        await [Permission.phone, Permission.contacts].request();
 
     if (statuses[Permission.phone]!.isGranted) {
       print('phone permission granted');

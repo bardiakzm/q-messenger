@@ -61,7 +61,7 @@ class Aes {
   ///Compresses data using GZip
   static Uint8List _compress(List<int> data) {
     final encoder = GZipEncoder();
-    return Uint8List.fromList(encoder.encode(data)!);
+    return Uint8List.fromList(encoder.encode(data));
   }
 
   ///Decompresses data using GZip

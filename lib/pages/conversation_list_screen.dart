@@ -173,12 +173,12 @@ class _ConversationListScreenState
             icon: const Icon(Icons.refresh),
             onPressed: _requestPermissionsAndLoadMessages,
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // TODO: Implement menu
-            },
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.more_vert),
+          //   onPressed: () {
+          //     // TODO: Implement menu
+          //   },
+          // ),
         ],
       );
     }
@@ -267,12 +267,12 @@ class _ConversationListScreenState
                   );
                 },
               ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Implement new conversation
-        },
-        child: const Icon(Icons.chat),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     // TODO: Implement new conversation
+      //   },
+      //   child: const Icon(Icons.chat),
+      // ),
     );
   }
 }

@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 // import 'package:peyazma_windows/pages/login_page.dart' deferred as login;
 // import 'package:peyazma_windows/pages/dashboard.dart' deferred as dash;
 // import 'package:peyazma_windows/pages/splash_screen.dart' deferred as splash;

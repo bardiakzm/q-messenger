@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_number/sim_card.dart';
 import 'package:q_messenger/services/aes_encryption.dart';
 import '../resources/data_models.dart';
 import '../services/conversation_provider.dart';
@@ -7,7 +6,6 @@ import '../services/crypto.dart';
 import '../services/obfuscate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:q_messenger/services/sms_provider.dart';
-import 'package:q_messenger/resources/widgets/sim_numbered_icon.dart';
 import '../services/simcard_manager.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
