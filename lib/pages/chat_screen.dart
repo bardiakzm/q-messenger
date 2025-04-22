@@ -76,189 +76,198 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       _scrollToBottom();
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: Colors.blue.shade200,
-              radius: 16,
-              child: Text(
-                currentConversation.contact.name[0],
-                style: TextStyle(color: Colors.blue.shade800, fontSize: 14),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: Colors.blue.shade200,
+                radius: 16,
+                child: Text(
+                  currentConversation.contact.name[0],
+                  style: TextStyle(color: Colors.blue.shade800, fontSize: 14),
+                ),
               ),
+              SizedBox(width: 8),
+              Text(currentConversation.contact.name),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(
+                _isEncrypted ? Icons.lock : Icons.lock_open,
+                color: _isEncrypted ? Colors.green : Colors.amber,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isEncrypted = !_isEncrypted;
+                });
+              },
             ),
-            SizedBox(width: 8),
-            Text(currentConversation.contact.name),
+            IconButton(
+              icon: Icon(Icons.more_vert),
+              onPressed: () {
+                // TODO: Implement menu
+              },
+            ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _isEncrypted ? Icons.lock : Icons.lock_open,
-              color: _isEncrypted ? Colors.green : Colors.amber,
-            ),
-            onPressed: () {
-              setState(() {
-                _isEncrypted = !_isEncrypted;
-              });
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.more_vert),
-            onPressed: () {
-              // TODO: Implement menu
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Encryption status indicator
-          Container(
-            color: _isEncrypted ? Colors.green.shade100 : Colors.amber.shade100,
-            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  _isEncrypted ? Icons.lock : Icons.lock_open,
-                  size: 16,
-                  color:
-                      _isEncrypted
-                          ? Colors.green.shade800
-                          : Colors.amber.shade800,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  _isEncrypted
-                      ? 'Messages are encrypted end-to-end'
-                      : 'Messages are not encrypted',
-                  style: TextStyle(
-                    fontSize: 12,
+        body: Column(
+          children: [
+            // Encryption status indicator
+            Container(
+              color:
+                  _isEncrypted ? Colors.green.shade100 : Colors.amber.shade100,
+              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _isEncrypted ? Icons.lock : Icons.lock_open,
+                    size: 16,
                     color:
                         _isEncrypted
                             ? Colors.green.shade800
                             : Colors.amber.shade800,
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          ///Messages list
-          Expanded(
-            child: ListView.builder(
-              // reverse: true,
-              controller: _scrollController,
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: conversationMessages.length,
-              itemBuilder: (context, index) {
-                final message = conversationMessages[index];
-                return _buildMessageBubble(message);
-              },
-            ),
-          ),
-          // Message composer
-          Container(
-            padding: EdgeInsets.only(right: 8, top: 4, bottom: 4, left: 10),
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              boxShadow: [
-                BoxShadow(
-                  offset: Offset(0, -1),
-                  blurRadius: 3,
-                  color: Colors.black.withOpacity(0.1),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: 'Message',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor:
-                          Theme.of(context).brightness == Brightness.light
-                              ? Colors.grey.shade200
-                              : Colors.grey.shade800,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
+                  SizedBox(width: 8),
+                  Text(
+                    _isEncrypted
+                        ? 'Messages are encrypted'
+                        : 'Messages are not encrypted',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color:
+                          _isEncrypted
+                              ? Colors.green.shade800
+                              : Colors.amber.shade800,
                     ),
-                    minLines: 1,
-                    maxLines: 6,
                   ),
-                ),
-                PopupMenuButton<int>(
-                  icon: Icon(Icons.sim_card, color: Colors.blueGrey),
-                  elevation: 6, // Add a soft shadow effect
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12), // Rounded corners
+                ],
+              ),
+            ),
+
+            ///Messages list
+            Expanded(
+              child: ListView.builder(
+                // reverse: true,
+                controller: _scrollController,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: conversationMessages.length,
+                itemBuilder: (context, index) {
+                  final message = conversationMessages[index];
+                  return _buildMessageBubble(message);
+                },
+              ),
+            ),
+            // Message composer
+            Container(
+              padding: EdgeInsets.only(right: 8, top: 4, bottom: 4, left: 10),
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    offset: Offset(0, -1),
+                    blurRadius: 3,
+                    color: Colors.black.withOpacity(0.1),
                   ),
-                  itemBuilder: (BuildContext context) {
-                    return [
-                      for (int index = 0; index < simCards.length; index++) ...[
-                        PopupMenuItem<int>(
-                          value: index,
-                          child: Row(
-                            children: [
-                              Icon(
-                                selectedSim == index
-                                    ? Icons.check_circle
-                                    : Icons.radio_button_unchecked,
-                                color:
-                                    selectedSim == index
-                                        ? Colors.blue
-                                        : Colors.grey,
-                              ),
-                              SizedBox(width: 10),
-                              // SimCardIcon(simNumber: index),  //TODO
-                              Expanded(
-                                child: Text(
-                                  simCards[index].carrierName ?? 'SIM $index',
-                                  style: TextStyle(
-                                    fontWeight:
-                                        selectedSim == index
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                    color:
-                                        selectedSim == index
-                                            ? Colors.blue
-                                            : Colors.black,
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: 'Message',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor:
+                            Theme.of(context).brightness == Brightness.light
+                                ? Colors.grey.shade200
+                                : Colors.grey.shade800,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                      minLines: 1,
+                      maxLines: 6,
+                    ),
+                  ),
+                  PopupMenuButton<int>(
+                    icon: Icon(Icons.sim_card, color: Colors.blueGrey),
+                    elevation: 6, // Add a soft shadow effect
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        12,
+                      ), // Rounded corners
+                    ),
+                    itemBuilder: (BuildContext context) {
+                      return [
+                        for (
+                          int index = 0;
+                          index < simCards.length;
+                          index++
+                        ) ...[
+                          PopupMenuItem<int>(
+                            value: index,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  selectedSim == index
+                                      ? Icons.check_circle
+                                      : Icons.radio_button_unchecked,
+                                  color:
+                                      selectedSim == index
+                                          ? Colors.blue
+                                          : Colors.grey,
+                                ),
+                                SizedBox(width: 10),
+                                // SimCardIcon(simNumber: index),  //TODO
+                                Expanded(
+                                  child: Text(
+                                    simCards[index].carrierName ?? 'SIM $index',
+                                    style: TextStyle(
+                                      fontWeight:
+                                          selectedSim == index
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                      color:
+                                          selectedSim == index
+                                              ? Colors.blue
+                                              : Colors.black,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        if (index < simCards.length - 1)
-                          const PopupMenuDivider(), // Adds a line between items
-                      ],
-                    ];
-                  },
-                  onSelected: (int index) {
-                    ref.read(selectedSimProvider.notifier).state = index;
-                  },
-                ),
+                          if (index < simCards.length - 1)
+                            const PopupMenuDivider(), // Adds a line between items
+                        ],
+                      ];
+                    },
+                    onSelected: (int index) {
+                      ref.read(selectedSimProvider.notifier).state = index;
+                    },
+                  ),
 
-                IconButton(
-                  icon: Icon(Icons.send),
-                  color: Colors.blue,
-                  onPressed:
-                      _isEncrypted ? _sendEncryptedMessage : _sendMessage,
-                ),
-              ],
+                  IconButton(
+                    icon: Icon(Icons.send),
+                    color: Colors.blue,
+                    onPressed:
+                        _isEncrypted ? _sendEncryptedMessage : _sendMessage,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

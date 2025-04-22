@@ -190,89 +190,95 @@ class _ConversationListScreenState
     final isLoading = ref.watch(loadingProvider);
     ref.watch(loadSimProvider);
 
-    return Scaffold(
-      appBar: _buildAppBar(),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : filteredConversations.isEmpty
-              ? Center(
-                child: Text(
-                  _isSearching
-                      ? 'No results found for "${_searchController.text}"'
-                      : 'No conversations',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              )
-              : ListView.separated(
-                itemCount: filteredConversations.length,
-                separatorBuilder: (context, index) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final conversation = filteredConversations[index];
-                  if (conversation.messages.isEmpty) {
-                    return const SizedBox.shrink(); // Skip empty conversations
-                  }
-                  final lastMessage = conversation.messages.last;
+    return SafeArea(
+      child: Scaffold(
+        appBar: _buildAppBar(),
+        body:
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filteredConversations.isEmpty
+                ? Center(
+                  child: Text(
+                    _isSearching
+                        ? 'No results found for "${_searchController.text}"'
+                        : 'No conversations',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                )
+                : ListView.separated(
+                  itemCount: filteredConversations.length,
+                  separatorBuilder:
+                      (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final conversation = filteredConversations[index];
+                    if (conversation.messages.isEmpty) {
+                      return const SizedBox.shrink(); // Skip empty conversations
+                    }
+                    final lastMessage = conversation.messages.last;
 
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.blue.shade200,
-                      child: Text(
-                        conversation.contact.name.isNotEmpty
-                            ? conversation.contact.name[0]
-                            : '?',
-                        style: TextStyle(color: Colors.blue.shade800),
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.blue.shade200,
+                        child: Text(
+                          conversation.contact.name.isNotEmpty
+                              ? conversation.contact.name[0]
+                              : '?',
+                          style: TextStyle(color: Colors.blue.shade800),
+                        ),
                       ),
-                    ),
-                    title: Text(
-                      conversation.contact.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Row(
-                      children: [
-                        if (lastMessage.isEncrypted)
-                          const Padding(
-                            padding: EdgeInsets.only(right: 4),
-                            child: Icon(
-                              Icons.lock,
-                              size: 14,
-                              color: Colors.green,
+                      title: Text(
+                        conversation.contact.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Row(
+                        children: [
+                          if (lastMessage.isEncrypted)
+                            const Padding(
+                              padding: EdgeInsets.only(right: 4),
+                              child: Icon(
+                                Icons.lock,
+                                size: 14,
+                                color: Colors.green,
+                              ),
+                            ),
+                          Expanded(
+                            child: Text(
+                              lastMessage.content,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        Expanded(
-                          child: Text(
-                            lastMessage.content,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        ],
+                      ),
+                      trailing: Text(
+                        _formatTimestamp(lastMessage.timestamp),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    ChatScreen(conversation: conversation),
                           ),
-                        ),
-                      ],
-                    ),
-                    trailing: Text(
-                      _formatTimestamp(lastMessage.timestamp),
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) =>
-                                  ChatScreen(conversation: conversation),
-                        ),
-                      ).then((_) {
-                        ref.read(smsProvider.notifier).loadMessages();
-                      });
-                    },
-                  );
-                },
-              ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {
-      //     // TODO: Implement new conversation
-      //   },
-      //   child: const Icon(Icons.chat),
-      // ),
+                        ).then((_) {
+                          ref.read(smsProvider.notifier).loadMessages();
+                        });
+                      },
+                    );
+                  },
+                ),
+        // floatingActionButton: FloatingActionButton(
+        //   onPressed: () {
+        //     // TODO: Implement new conversation
+        //   },
+        //   child: const Icon(Icons.chat),
+        // ),
+      ),
     );
   }
 }
