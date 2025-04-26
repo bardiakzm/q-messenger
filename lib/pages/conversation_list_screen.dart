@@ -11,6 +11,8 @@ import 'package:q_messenger/services/global_providers.dart';
 // Loading state provider
 final loadingProvider = StateProvider<bool>((ref) => false);
 
+final permissionsCheckedProvider = StateProvider<bool>((ref) => false);
+
 //search provider
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
@@ -85,45 +87,19 @@ class _ConversationListScreenState
   }) async {
     ref.read(loadingProvider.notifier).state = true;
 
-    ///SMS permissions
     var smsStatus = await Permission.sms.status;
-    print('smsStatus: $smsStatus !!!!!!!');
     if (!smsStatus.isGranted || forceRequest) {
       smsStatus = await Permission.sms.request();
       if (!smsStatus.isGranted) {
         ref.read(loadingProvider.notifier).state = false;
-        //TODO req message here
+        ref.read(permissionsCheckedProvider.notifier).state = true;
         return;
       }
     }
-
-    ///phone state permission
-    var phoneStatus = await Permission.phone.status;
-    if (!phoneStatus.isGranted) {
-      phoneStatus = await Permission.phone.request();
-      if (!phoneStatus.isGranted) {
-        //TODO handle phone perm not granted
-      }
-    }
-
-    /// send SMS perm
-    var sendSmsStatus = await Permission.sms.status;
-    if (!sendSmsStatus.isGranted) {
-      sendSmsStatus = await Permission.sms.request();
-      //TODO handle phone perm not granted
-    }
-
-    ///contact perm
-    var contactsStatus = await Permission.contacts.status;
-    if (!contactsStatus.isGranted) {
-      contactsStatus = await Permission.contacts.request();
-      if (!contactsStatus.isGranted) {
-        return;
-      }
-    }
-
     await ref.read(smsProvider.notifier).loadMessages();
+
     ref.read(loadingProvider.notifier).state = false;
+    ref.read(permissionsCheckedProvider.notifier).state = true;
   }
 
   Widget askForPermButton() {
@@ -208,9 +184,12 @@ class _ConversationListScreenState
   @override
   Widget build(BuildContext context) {
     final filteredConversations = ref.watch(filteredConversationsProvider);
-    final isLoading = ref.watch(loadingProvider);
+    final permissionsChecked = ref.watch(permissionsCheckedProvider);
     final notGrantedPerms = ref.watch(permissionProvider);
+    final isLoading = ref.watch(loadingProvider);
+
     final bool smsPermGranted = notGrantedPerms.isEmpty;
+
     ref.watch(loadSimProvider);
 
     return SafeArea(

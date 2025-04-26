@@ -25,7 +25,7 @@ class MainActivity: FlutterActivity() {
                 "getAllSms" -> {
                     val requiredPermissions = arrayOf(
                         Manifest.permission.READ_SMS,
-                        Manifest.permission.READ_CONTACTS
+                        Manifest.permission.READ_CONTACTS,
                     )
 
                     if (hasPermissions(requiredPermissions)) {
@@ -84,20 +84,39 @@ class MainActivity: FlutterActivity() {
 
     private fun sendSms(address: String, body: String, simSlot: Int = 0) {
         try {
-            val subscriptionManager = getSystemService(SubscriptionManager::class.java)
-            val subscriptionInfoList = subscriptionManager.activeSubscriptionInfoList
+            // First check if we have READ_PHONE_STATE permission
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE)
+                == PackageManager.PERMISSION_GRANTED) {
 
-            if (subscriptionInfoList != null && subscriptionInfoList.size > simSlot) {
-                val subscriptionId = subscriptionInfoList[simSlot].subscriptionId
-                val smsManager = SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
+                val subscriptionManager = getSystemService(SubscriptionManager::class.java)
+                val subscriptionInfoList = subscriptionManager.activeSubscriptionInfoList
 
-                // For long messages, split into parts
-                val parts = smsManager.divideMessage(body)
-                smsManager.sendMultipartTextMessage(address, null, parts, null, null)
-            } else {
-                throw Exception("Invalid SIM slot or no active SIM cards.")
+                if (subscriptionInfoList != null && subscriptionInfoList.isNotEmpty()) {
+                    // If requested SIM slot is valid
+                    if (simSlot < subscriptionInfoList.size) {
+                        val subscriptionId = subscriptionInfoList[simSlot].subscriptionId
+                        val smsManager = SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
+                        val parts = smsManager.divideMessage(body)
+                        smsManager.sendMultipartTextMessage(address, null, parts, null, null)
+                        return
+                    } else {
+                        // If requested slot is invalid but there are other slots, use the first one
+                        val subscriptionId = subscriptionInfoList[0].subscriptionId
+                        val smsManager = SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
+                        val parts = smsManager.divideMessage(body)
+                        smsManager.sendMultipartTextMessage(address, null, parts, null, null)
+                        return
+                    }
+                }
             }
+
+            // Fallback to default SmsManager (usually works on single-SIM devices)
+            val defaultSmsManager = SmsManager.getDefault()
+            val parts = defaultSmsManager.divideMessage(body)
+            defaultSmsManager.sendMultipartTextMessage(address, null, parts, null, null)
+
         } catch (e: Exception) {
+            println("Failed to send SMS: ${e.message}")
             e.printStackTrace()
             throw e
         }

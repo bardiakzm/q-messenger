@@ -13,7 +13,7 @@ class PermissionNotifier extends StateNotifier<List<String>> {
     var smsStatus = await Permission.sms.status;
     var phoneStatus = await Permission.phone.status;
     var contactsStatus = await Permission.contacts.status;
-
+    // var phoneStateStatus = await Permission.;
     List<String> notGrantedPerms = [];
     if (!smsStatus.isGranted) {
       notGrantedPerms.add('sms');
