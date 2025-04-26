@@ -33,6 +33,7 @@ Coming soon:
 - Backup communication channel when primary methods are unavailable
 - Privacy-focused conversations
 
+
 ## Enhanced Security Recommendations
 
 If you require a higher level of security, consider forking this repository and recompiling with your own personalized environment variables and encryption keys:
@@ -44,6 +45,7 @@ If you require a higher level of security, consider forking this repository and 
 5. Share this customized build only with your trusted contacts
 
 This approach ensures that even if the original application's encryption keys are compromised, your communications remain secure as they're encrypted with keys known only to you and your trusted circle.
+
 
 ## Roadmap
 - [ ] Add symmetric encryption options
