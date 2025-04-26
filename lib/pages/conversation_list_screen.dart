@@ -6,6 +6,7 @@ import '../services/simcard_manager.dart';
 import '../services/sms_provider.dart';
 import 'chat_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:q_messenger/services/global_providers.dart';
 
 // Loading state provider
 final loadingProvider = StateProvider<bool>((ref) => false);
@@ -56,9 +57,13 @@ class _ConversationListScreenState
   void initState() {
     // _searchController.dispose();
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _requestPermissionsAndLoadMessages();
+      _requestPermissionsAndLoadMessages(forceRequest: true);
     });
+    // Future.delayed(const Duration(seconds: 10), () {
+    //   _requestPermissionsAndLoadMessages();
+    // });
   }
 
   void _startSearch() {
@@ -75,12 +80,15 @@ class _ConversationListScreenState
     });
   }
 
-  Future<void> _requestPermissionsAndLoadMessages() async {
+  Future<void> _requestPermissionsAndLoadMessages({
+    bool forceRequest = false,
+  }) async {
     ref.read(loadingProvider.notifier).state = true;
 
     ///SMS permissions
     var smsStatus = await Permission.sms.status;
-    if (!smsStatus.isGranted) {
+    print('smsStatus: $smsStatus !!!!!!!');
+    if (!smsStatus.isGranted || forceRequest) {
       smsStatus = await Permission.sms.request();
       if (!smsStatus.isGranted) {
         ref.read(loadingProvider.notifier).state = false;
@@ -116,6 +124,19 @@ class _ConversationListScreenState
 
     await ref.read(smsProvider.notifier).loadMessages();
     ref.read(loadingProvider.notifier).state = false;
+  }
+
+  Widget askForPermButton() {
+    return Center(
+      child: ElevatedButton.icon(
+        icon: const Icon(Icons.lock_open),
+        label: const Text('Grant Permissions'),
+        onPressed: _requestPermissionsAndLoadMessages,
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+      ),
+    );
   }
 
   String _formatTimestamp(DateTime timestamp) {
@@ -188,96 +209,105 @@ class _ConversationListScreenState
   Widget build(BuildContext context) {
     final filteredConversations = ref.watch(filteredConversationsProvider);
     final isLoading = ref.watch(loadingProvider);
+    final notGrantedPerms = ref.watch(permissionProvider);
+    final bool smsPermGranted = notGrantedPerms.isEmpty;
     ref.watch(loadSimProvider);
 
     return SafeArea(
       child: Scaffold(
         appBar: _buildAppBar(),
-        body:
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : filteredConversations.isEmpty
-                ? Center(
-                  child: Text(
-                    _isSearching
-                        ? 'No results found for "${_searchController.text}"'
-                        : 'No conversations',
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                )
-                : ListView.separated(
-                  itemCount: filteredConversations.length,
-                  separatorBuilder:
-                      (context, index) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final conversation = filteredConversations[index];
-                    if (conversation.messages.isEmpty) {
-                      return const SizedBox.shrink(); // Skip empty conversations
-                    }
-                    final lastMessage = conversation.messages.last;
+        body: FutureBuilder(
+          future: Permission.sms.status,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final smsStatus = snapshot.data;
+            final smsPermGranted = smsStatus?.isGranted ?? false;
 
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.blue.shade200,
-                        child: Text(
-                          conversation.contact.name.isNotEmpty
-                              ? conversation.contact.name[0]
-                              : '?',
-                          style: TextStyle(color: Colors.blue.shade800),
-                        ),
-                      ),
-                      title: Text(
-                        conversation.contact.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Row(
-                        children: [
-                          if (lastMessage.isEncrypted)
-                            const Padding(
-                              padding: EdgeInsets.only(right: 4),
-                              child: Icon(
-                                Icons.lock,
-                                size: 14,
-                                color: Colors.green,
-                              ),
-                            ),
-                          Expanded(
-                            child: Text(
-                              lastMessage.content,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      trailing: Text(
-                        _formatTimestamp(lastMessage.timestamp),
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    ChatScreen(conversation: conversation),
-                          ),
-                        ).then((_) {
-                          ref.read(smsProvider.notifier).loadMessages();
-                        });
-                      },
-                    );
-                  },
+            if (!smsPermGranted) {
+              return askForPermButton();
+            }
+
+            if (isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (filteredConversations.isEmpty) {
+              return Center(
+                child: Text(
+                  _isSearching
+                      ? 'No results found for "${_searchController.text}"'
+                      : 'No conversations',
+                  style: const TextStyle(color: Colors.grey),
                 ),
-        // floatingActionButton: FloatingActionButton(
-        //   onPressed: () {
-        //     // TODO: Implement new conversation
-        //   },
-        //   child: const Icon(Icons.chat),
-        // ),
+              );
+            }
+
+            return ListView.separated(
+              itemCount: filteredConversations.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final conversation = filteredConversations[index];
+                if (conversation.messages.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                final lastMessage = conversation.messages.last;
+
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.blue.shade200,
+                    child: Text(
+                      conversation.contact.name.isNotEmpty
+                          ? conversation.contact.name[0]
+                          : '?',
+                      style: TextStyle(color: Colors.blue.shade800),
+                    ),
+                  ),
+                  title: Text(
+                    conversation.contact.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Row(
+                    children: [
+                      if (lastMessage.isEncrypted)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 4),
+                          child: Icon(
+                            Icons.lock,
+                            size: 14,
+                            color: Colors.green,
+                          ),
+                        ),
+                      Expanded(
+                        child: Text(
+                          lastMessage.content,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  trailing: Text(
+                    _formatTimestamp(lastMessage.timestamp),
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => ChatScreen(conversation: conversation),
+                      ),
+                    ).then((_) {
+                      ref.read(smsProvider.notifier).loadMessages();
+                    });
+                  },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
