@@ -41,5 +41,6 @@ Coming soon:
 - [ ] Dynamic keys
 - [ ] Message verification system
 - [ ] Support for more languages
+- [ ] PQC
 
 ---
