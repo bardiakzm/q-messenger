@@ -33,6 +33,8 @@ dependencies:
   crypto: ^3.0.6
   mobile_number: ^3.0.0
   device_info_plus: ^11.3.3
+  xkyber_crypto: ^1.0.8
+  es_compression: ^2.0.14
 
 dev_dependencies:
   flutter_test:
